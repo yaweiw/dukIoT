@@ -13,14 +13,12 @@ function processLine(line) {
 
 function send(msg) {
     return "send() called" + msg;
-
 }
 
 function connect(msg) {
-    return "connect() called ";
-
+    return "connect() called " + msg;
 }
 
 function receive(msg) {
-    return "receive() called ";
+    return "receive() called " + msg;
 }

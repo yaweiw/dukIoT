@@ -34,8 +34,25 @@ int main(int argc, const char *argv[]) {
             line[idx++] = '\0';
 
             duk_push_global_object(ctx);
-            duk_get_prop_string(ctx, -1 /*index*/, "processLine");
+            //duk_get_prop_string(ctx, -1 /*index*/, "processLine");
+            duk_get_prop_string(ctx, -1 /*index*/, "connect"); //-1
             duk_push_string(ctx, line);
+            if (duk_pcall(ctx, 1 /*nargs*/) != 0) {
+                printf("Error: %s\n", duk_safe_to_string(ctx, -1));
+            } else {
+                printf("%s\n", duk_safe_to_string(ctx, -1));
+            }
+
+            duk_get_prop_string(ctx, -1 /*index*/, "send");
+            duk_get_prop(ctx, -2); // return of connect
+            if (duk_pcall(ctx, 1 /*nargs*/) != 0) {
+                printf("Error: %s\n", duk_safe_to_string(ctx, -1));
+            } else {
+                printf("%s\n", duk_safe_to_string(ctx, -1));
+            }
+
+            duk_get_prop_string(ctx, -1 /*index*/, "send");
+            duk_get_prop(ctx, -2); // return of connect
             if (duk_pcall(ctx, 1 /*nargs*/) != 0) {
                 printf("Error: %s\n", duk_safe_to_string(ctx, -1));
             } else {
