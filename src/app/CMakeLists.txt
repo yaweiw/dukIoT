@@ -12,10 +12,12 @@ set(cmdlet_js_file ${cmdlet_js_file}
 include_directories (.)
 add_subdirectory(cmdlets)
 add_subdirectory(duktapert)
+add_subdirectory(iothubclientlib)
+add_subdirectory(helper)
 
 # add the executable
 add_executable(App app.c)
-target_link_libraries (App duktapert)
+target_link_libraries (App duktapert iothubclientlib helper)
 
 # add the install targets
 install (TARGETS App DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
