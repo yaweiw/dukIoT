@@ -67,6 +67,7 @@
 /*
 * add "length" to the length
 */
+static uint32_t addTemp;
 #define SHA224_256AddLength(context, length)               \
   (addTemp = (context)->Length_Low, (context)->Corrupted = \
     (((context)->Length_Low += (length)) < addTemp) &&     \
@@ -229,7 +230,6 @@ int SHA256Reset(SHA256Context *context)
 int SHA256Input(SHA256Context *context, const uint8_t *message_array,
     unsigned int length)
 {
-    uint32_t addTemp;
     if (!length)
         return shaSuccess;
 
@@ -281,7 +281,6 @@ int SHA256Input(SHA256Context *context, const uint8_t *message_array,
 int SHA256FinalBits(SHA256Context *context,
     const uint8_t message_bits, unsigned int length)
 {
-    uint32_t addTemp;
     uint8_t masks[8] = {
         /* 0 0b00000000 */ 0x00, /* 1 0b10000000 */ 0x80,
         /* 2 0b11000000 */ 0xC0, /* 3 0b11100000 */ 0xE0,
