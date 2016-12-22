@@ -1,8 +1,10 @@
-var cstr = "abc";
+var cstr = "test connectionstring";
 var pro = "HTTP";
-var message = "msg";
-var IoTclient = this.ioTHubClientCreateFromConnectionString(cstr, pro);
-print(IoTclient);
-var MessageHandle = this.ioTHubMessageCreateFromByteArray(message, message.length);
-print(MessageHandle);
-print(this.ioTHubClientSendEventAsync(IoTclient, MessageHandle));
+var client = new IoTHubClient(cstr, pro);
+print(client.getconnectionstring());
+print(client.sendeventasync());
+print(client.dowork());
+print(client.dispose());
+
+
+

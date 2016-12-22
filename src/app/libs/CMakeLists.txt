@@ -1,0 +1,3 @@
+add_subdirectory(iothubclientlib)
+add_subdirectory(iothubmessagelib)
+add_subdirectory(iothubplatformlib)

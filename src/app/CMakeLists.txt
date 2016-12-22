@@ -10,9 +10,9 @@ set(cmdlet_js_file ${cmdlet_js_file}
 
 # add the binary tree to the search path for include files
 include_directories (.)
+add_subdirectory(libs)
 add_subdirectory(cmdlets)
 add_subdirectory(duktapert)
-add_subdirectory(iothubclientlib)
 add_subdirectory(helper)
 
 # add the executable
