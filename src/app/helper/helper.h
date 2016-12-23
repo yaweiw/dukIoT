@@ -1,6 +1,8 @@
 #ifndef HELPER_H
 #define HELPER_H
 
+#include <stdio.h>
+#include <stdlib.h>
 #include "../duktapert/duktape.h"
 
 #ifdef __cplusplus
@@ -12,6 +14,10 @@ extern "C" {
 #endif
 
     int duk_register(duk_context *ctx, DUKAPIHANDLE cFuncName, const char* propName);
+    duk_ret_t propExistsGlobal(duk_context *ctx, char* line);
+    duk_ret_t propExistsInstance(duk_context *ctx, char* line);
+    duk_ret_t duk_readFile(duk_context *ctx);
+
 
 #ifdef __cplusplus
 }

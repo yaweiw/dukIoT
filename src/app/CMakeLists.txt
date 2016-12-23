@@ -8,9 +8,14 @@ set(cmdlet_js_file ${cmdlet_js_file}
     ./cmdlet.js
     )
 
+# do test
+option (DO_TEST
+          "Do tests" ON)
+
 # add the binary tree to the search path for include files
 include_directories (.)
 add_subdirectory(libs)
+add_subdirectory(modules)
 add_subdirectory(duktapert)
 add_subdirectory(helper)
 

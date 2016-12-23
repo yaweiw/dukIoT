@@ -24,3 +24,10 @@ duk_ret_t duk_register(duk_context *ctx, DUKAPIHANDLE cFuncHandle, const char* p
     duk_pop(ctx);
     return 0;
 }
+
+// warning C4113: 'duk_ret_t (__cdecl *)(duk_context *,const char *)' differs in parameter lists from 'duk_c_function'
+duk_ret_t duk_readFile(duk_context *ctx) {
+    duk_push_string_file(ctx, duk_to_string(ctx, -1));
+    return 1;
+}
+
