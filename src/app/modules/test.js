@@ -1,9 +1,14 @@
-var cstr = "IoTHub connection string";
+var cstr = "<device connection string>";
 
 var ConnectionString = require('azure-iot-device').ConnectionString;
 var http = require('azure-iot-device').Protocol.HTTP;
 var client = require('azure-iot-device').Client;
 var Message = require('azure-iot-device').Message;
+
+var cn = ConnectionString.parse(cstr);
+print(cn.HostName);
+print(cn.SharedAccessKeyName);
+print(cn.SharedAccessKey);
 
 var iothubclient = client.fromConnectionString(cstr, http);
 var msg = new Message("some msg data");
@@ -31,17 +36,6 @@ function closeCallback (err) {
         print('[Handle] close succeed\n');
     }
 }
-
-
 iothubclient.open(connectCallback);
-
 iothubclient.sendEvent(msg, sendCallback);
-
-print(msg.getData() + " has been sent!");
-
-iothubclient.close(closeCallback);
-
-var cn = ConnectionString.parse(cstr);
-print(cn.HostName);
-print(cn.SharedAccessKeyName);
-print(cn.SharedAccessKey);
+iothubclient.close(closeCallback); 
