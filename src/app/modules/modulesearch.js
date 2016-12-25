@@ -3,7 +3,6 @@ Duktape.modSearch = function (id) {
      * 'id' is in resolved canonical form so it only contains terms and
      * slashes, and no '.' or '..' terms.
      */
-    print('loading module:', id);
     var res;
 
     res = readFile('./' + id + '.js'); // so require('test2') not require('./test2')

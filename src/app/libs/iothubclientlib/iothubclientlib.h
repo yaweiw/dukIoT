@@ -1,9 +1,6 @@
 #ifndef IOTHUBCLIENTLIB_H
 #define IOTHUBCLIENTLIB_H
 
-#include "../../duktapert/duktape.h"
-#include "../../helper/helper.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -12,8 +9,7 @@ extern "C" {
     duk_ret_t iothubclient_setmessagecallback(duk_context *ctx);
     duk_ret_t iothubclient_setoption(duk_context *ctx);
     duk_ret_t iothubclient_sendeventasync(duk_context *ctx);
-    duk_ret_t iothubclient_dowork(duk_context *ctx);
-    duk_ret_t iothubclient_dispose(duk_context *ctx);
+    duk_ret_t iothubclient_destory(duk_context *ctx);
 
     void iothubclient_init(duk_context *ctx);
     void iothubclient_test(duk_context *ctx);

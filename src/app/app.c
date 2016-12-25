@@ -5,7 +5,7 @@
 #include "libs/iothubclientlib/iothubclientlib.h"
 #include "helper/helper.h"
 
-#define DO_TEST
+//#define DO_TEST
 
 int main(int argc, const char *argv[]) {
     duk_context *ctx = NULL;
@@ -29,9 +29,8 @@ int main(int argc, const char *argv[]) {
     iothubclient_init(ctx);
     #ifdef DO_TEST
     iothubclient_test(ctx);
-    #endif
-
     printf("\nFinish test.\n\n");
+    #endif
 
     printf("Register module search function.\n\n");
     if (duk_peval_file(ctx, "modulesearch.js") != 0) {

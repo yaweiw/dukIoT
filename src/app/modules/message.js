@@ -7,7 +7,3 @@ this.Message = function (message) {
     };
     return obj;
 }
-
-this.getData = function () {
-    return data;
-}

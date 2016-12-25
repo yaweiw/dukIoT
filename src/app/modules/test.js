@@ -1,4 +1,4 @@
-var cstr = "HostName=yaweiIotHub.azure-devices.net;DeviceId=yaweiFirstDevice;SharedAccessKey=e3MIeWm8OvVL2zwqiVymLla1uIvsl3vQVO0cFUjoKb8=";
+var cstr = "IoTHub connection string";
 
 var ConnectionString = require('azure-iot-device').ConnectionString;
 var http = require('azure-iot-device').Protocol.HTTP;
@@ -24,11 +24,22 @@ function sendCallback (err) {
     }
 }
 
+function closeCallback (err) {
+    if (err) {
+        print('[Handle] close failed: ' + err);
+    } else {
+        print('[Handle] close succeed\n');
+    }
+}
+
+
 iothubclient.open(connectCallback);
 
 iothubclient.sendEvent(msg, sendCallback);
 
 print(msg.getData() + " has been sent!");
+
+iothubclient.close(closeCallback);
 
 var cn = ConnectionString.parse(cstr);
 print(cn.HostName);
