@@ -1,20 +1,41 @@
- 'use strict';
+var cstr = "<your ConnectionString>";
 
- var iothub = require('azure-iothub');
- var connectionString = 'HostName=yaweiIotHub.azure-devices.net;DeviceId=yaweiFirstDevice;SharedAccessKey=e3MIeWm8OvVL2zwqiVymLla1uIvsl3vQVO0cFUjoKb8=';
+var ConnectionString = require('azure-iot-device').ConnectionString;
+var http = require('azure-iot-device').Protocol.HTTP;
+var client = require('azure-iot-device').Client;
+var Message = require('azure-iot-device').Message;
 
- var registry = iothub.Registry.fromConnectionString(connectionString);
- var device = new iothub.Device(null);
- device.deviceId = 'myFirstNodeDevice';
- registry.create(device, function(err, deviceInfo, res) {
-   if (err) {
-     registry.get(device.deviceId, printDeviceInfo);
-   }
-   if (deviceInfo) {
-     printDeviceInfo(err, deviceInfo, res)
-   }
- });
+var cn = ConnectionString.parse(cstr);
+print(cn.HostName);
+print(cn.SharedAccessKeyName);
+print(cn.SharedAccessKey);
 
- function printDeviceInfo(err, deviceInfo, res) {
-     print("deviceInfo");
- }
+var iothubclient = client.fromConnectionString(cstr, http);
+var msg = new Message("some msg data");
+
+function connectCallback (err) {
+    if (err) {
+        print('[Device] Could not connect: ' + err);
+    } else {
+        print('[Device] Client connected\n');
+    }
+}
+
+function sendCallback (err) {
+    if (err) {
+        print('[Device] sendEvent failed: ' + err);
+    } else {
+        print('[Device] sendEvent succeed\n');
+    }
+}
+
+function closeCallback (err) {
+    if (err) {
+        print('[Handle] close failed: ' + err);
+    } else {
+        print('[Handle] close succeed\n');
+    }
+}
+iothubclient.open(connectCallback);
+iothubclient.sendEvent(msg, sendCallback);
+iothubclient.close(closeCallback);

@@ -241,7 +241,6 @@ endif()
 
 # add duktape runtime, libraries and modules
 add_subdirectory(libs)
-add_subdirectory(modules)
 add_subdirectory(duktapert)
 add_subdirectory(helper)
 
@@ -250,8 +249,28 @@ add_executable(App app.c)
 target_link_libraries (App duktapert iothubclientlib helper)
 
 if (NOT DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY OR CMAKE_RUNTIME_OUTPUT_DIRECTORY STREQUAL "")
-    SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
+    SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
 endif()
+
+message(status "#################")
+message(status "{AZURE_C_SHARED_UTILITY_INCLUDES}: ${AZURE_C_SHARED_UTILITY_INCLUDES}")
+message(status "{azure_c_shared_utility}: ${azure_c_shared_utility}")
+message(status "{SHARED_UTIL_INC_FOLDER}: ${SHARED_UTIL_INC_FOLDER}")
+message(STATUS "CMAKE_RUNTIME_OUTPUT_DIRECTORY : ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+message(status "#################")
+
+set(module_js_files ${module_js_files}
+    ./modules/azure-iot-device.js
+    ./modules/connectionstring.js
+    ./modules/test.js
+    ./modules/protocol.js
+    ./modules/message.js
+    ./modules/client.js
+    ./modules/modulesearch.js
+    )
+
+file (COPY ${module_js_files} DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Debug)
+file (COPY ${module_js_files} DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Release)
 
 # add the install targets
 install (TARGETS App DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})

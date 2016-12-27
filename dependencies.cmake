@@ -9,12 +9,6 @@ if (NOT DEFINED SHARED_UTIL_INC_FOLDER OR SHARED_UTIL_INC_FOLDER STREQUAL "")
     set(SHARED_UTIL_INC_FOLDER "${PROJECT_SOURCE_DIR}/azure-iot-sdk-c/c-utility/inc")
 endif()
 
-message(status "#################")
-message(status "{AZURE_C_SHARED_UTILITY_INCLUDES}: ${AZURE_C_SHARED_UTILITY_INCLUDES}")
-message(status "{azure_c_shared_utility}: ${azure_c_shared_utility}")
-message(status "{SHARED_UTIL_INC_FOLDER}: ${SHARED_UTIL_INC_FOLDER}")
-message(status "#################")
-
 if(${use_installed_dependencies})
     if(NOT azure_c_shared_utility_FOUND)
         find_package(azure_c_shared_utility REQUIRED CONFIG)
