@@ -252,13 +252,6 @@ if (NOT DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY OR CMAKE_RUNTIME_OUTPUT_DIRECTORY
     SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
 endif()
 
-message(status "#################")
-message(status "{AZURE_C_SHARED_UTILITY_INCLUDES}: ${AZURE_C_SHARED_UTILITY_INCLUDES}")
-message(status "{azure_c_shared_utility}: ${azure_c_shared_utility}")
-message(status "{SHARED_UTIL_INC_FOLDER}: ${SHARED_UTIL_INC_FOLDER}")
-message(STATUS "CMAKE_RUNTIME_OUTPUT_DIRECTORY : ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
-message(status "#################")
-
 set(module_js_files ${module_js_files}
     ./modules/azure-iot-device.js
     ./modules/connectionstring.js
@@ -267,6 +260,8 @@ set(module_js_files ${module_js_files}
     ./modules/message.js
     ./modules/client.js
     ./modules/modulesearch.js
+    ./modules/registry.js
+    ./modules/azure-iothub.js
     )
 
 file (COPY ${module_js_files} DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Debug)
