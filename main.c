@@ -35,10 +35,42 @@
 
 #define os_helloworld_log(format, ...)  custom_log("helloworld", format, ##__VA_ARGS__)
 
+int config_mico_wifi( mico_Context_t* context, char* ssid, char* pass )
+{
+  int ssid_len = strlen(ssid);
+  os_helloworld_log("SSID %s, length %d.", ssid, ssid_len);
+  if (ssid_len == 0 || ssid_len > maxSsidLen - 1)
+  {
+    return 1;
+  }
+  strncpy(context->flashContentInRam.micoSystemConfig.ssid, ssid, ssid_len + 1);
+
+  int pass_len = strlen(pass);
+  strncpy(context->flashContentInRam.micoSystemConfig.key, pass, pass_len);
+  strncpy(context->flashContentInRam.micoSystemConfig.user_key, pass, pass_len);
+  context->flashContentInRam.micoSystemConfig.keyLength = strlen(context->flashContentInRam.micoSystemConfig.key);
+  context->flashContentInRam.micoSystemConfig.user_keyLength = strlen(context->flashContentInRam.micoSystemConfig.key);
+
+  context->flashContentInRam.micoSystemConfig.channel = 0;
+  memset(context->flashContentInRam.micoSystemConfig.bssid, 0x0, 6);
+  context->flashContentInRam.micoSystemConfig.security = SECURITY_TYPE_AUTO;
+  context->flashContentInRam.micoSystemConfig.dhcpEnable = true;
+
+  context->flashContentInRam.micoSystemConfig.configured = allConfigured;
+  mico_system_context_update(context);
+  return 0;
+}
+
 int application_start( void )
 {
   /* Start MiCO system functions according to mico_config.h*/
-  mico_system_init( mico_system_context_init( 0 ) );
+  mico_Context_t* mico_context = (mico_Context_t*) mico_system_context_init( 0 );
+
+  // Work around for configure WiFi now. Web-based config is blocked due to limited resource on MK3165.
+  // Please modify SSID and password to your target WIFI.
+  config_mico_wifi(mico_context, "MSFTLAB", "");
+
+  mico_system_init(mico_context);
   
   /* Output on debug serial port */
   os_helloworld_log( "Hello world! XXXX" );
@@ -61,5 +93,3 @@ int application_start( void )
       mico_thread_sleep(1);
   }
 }
-
-

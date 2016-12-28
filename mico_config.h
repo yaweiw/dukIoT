@@ -51,9 +51,9 @@
 
 /************************************************************************
  * Enable wlan connection, start easylink configuration if no wlan settings are existed */
-//#define MICO_WLAN_CONNECTION_ENABLE
+#define MICO_WLAN_CONNECTION_ENABLE
 
-#define MICO_CONFIG_MODE CONFIG_MODE_EASYLINK_WITH_SOFTAP
+#define MICO_CONFIG_MODE CONFIG_MODE_SOFT_AP
 
 #define EasyLink_TimeOut                60000 /**< EasyLink timeout 60 seconds. */
 
