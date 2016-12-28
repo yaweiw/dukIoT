@@ -80,7 +80,7 @@ int application_start( void )
   system_log("B -- Free memory %d bytes", MicoGetMemoryInfo()->free_memory); 
   os_helloworld_log( "DUK CONTEXT CREATED!" );
 
-  duk_eval_string(ctx, "10 + 20;");
+  duk_eval_string(ctx, "var a = 10 + 20; if (123) { if (123) {if (123) {if (123) {if (123) {if (123) {}}}}}}");
   os_helloworld_log( "EVAL STRING CALLED" );
   duk_destroy_heap(ctx);
   os_helloworld_log( "HEAP DESTROYED");
