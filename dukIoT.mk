@@ -25,7 +25,8 @@
 NAME := App_Helloworld
 
 $(NAME)_SOURCES := main.c /duktapert/duktape.c \
-  /http_server/app_httpd.c \
-  /http_server/web_data.c
+  /wifi_config/app_httpd.c \
+  /wifi_config/wifi_config.c \
+  /wifi_config/web_data.c
 
 $(NAME)_COMPONENTS += daemons/http_server
