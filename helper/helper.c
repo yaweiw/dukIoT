@@ -1,3 +1,17 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#ifndef use_test_runtime
+#define use_test_runtime
+#endif
+
+#ifdef use_test_runtime
+#include "../duktapert/testrt/duktape.h"
+#define use_test_on
+#else
+#include "../duktapert/duktape.h"
+#endif
+
 #include "helper.h"
 
 duk_ret_t propExistsGlobal(duk_context *ctx, char* line) {

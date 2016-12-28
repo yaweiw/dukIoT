@@ -50,6 +50,7 @@ option(dont_use_uploadtoblob "set dont_use_uploadtoblob to ON if the functionali
 option(no_logging "disable logging" OFF)
 option(use_installed_dependencies "set use_installed_dependencies to ON to use installed packages instead of building dependencies from submodules" OFF)
 option(use_firmware_update "build the Raspberry PI firmware_update sample" OFF)
+option(use_test_runtime "use test duktape runtime" ON)
 
 #Work in progress features
 #=========================
