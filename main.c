@@ -31,7 +31,7 @@
  */
 
 #include "mico.h"
-#include "duktape.h"
+#include "duktapert/duktape.h"
 
 #define os_helloworld_log(format, ...)  custom_log("helloworld", format, ##__VA_ARGS__)
 
