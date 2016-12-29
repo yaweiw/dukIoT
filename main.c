@@ -32,49 +32,25 @@
 
 #include "mico.h"
 #include "duktapert/duktape.h"
+#include "wifi_config/app_httpd.h"
+#include "wifi_config/wifi_config.h"
 
 #define os_helloworld_log(format, ...)  custom_log("helloworld", format, ##__VA_ARGS__)
 
-int config_mico_wifi( mico_Context_t* context, char* ssid, char* pass )
+void iot_custom_init(mico_Context_t* context)
 {
-  int ssid_len = strlen(ssid);
-  os_helloworld_log("SSID %s, length %d.", ssid, ssid_len);
-  if (ssid_len == 0 || ssid_len > maxSsidLen - 1)
+  // Uncomment below line to hard code the WiFi you want to connect. Then the device won't go into AP mode.
+  //iot_config_wifi(context, "MSFTLAB", "");
+
+  OSStatus err = mico_system_notify_register(mico_notify_WIFI_CONNECT_FAILED, (void *)iot_connect_fail_handler, context);
+  if (err != kNoErr)
   {
-    return 1;
+    os_helloworld_log("Fail to register WIFI connection fail handler.");
   }
-  strncpy(context->flashContentInRam.micoSystemConfig.ssid, ssid, ssid_len + 1);
-
-  int pass_len = strlen(pass);
-  strncpy(context->flashContentInRam.micoSystemConfig.key, pass, pass_len);
-  strncpy(context->flashContentInRam.micoSystemConfig.user_key, pass, pass_len);
-  context->flashContentInRam.micoSystemConfig.keyLength = strlen(context->flashContentInRam.micoSystemConfig.key);
-  context->flashContentInRam.micoSystemConfig.user_keyLength = strlen(context->flashContentInRam.micoSystemConfig.key);
-
-  context->flashContentInRam.micoSystemConfig.channel = 0;
-  memset(context->flashContentInRam.micoSystemConfig.bssid, 0x0, 6);
-  context->flashContentInRam.micoSystemConfig.security = SECURITY_TYPE_AUTO;
-  context->flashContentInRam.micoSystemConfig.dhcpEnable = true;
-
-  context->flashContentInRam.micoSystemConfig.configured = allConfigured;
-  mico_system_context_update(context);
-  return 0;
 }
 
-int application_start( void )
+void iot_run_duktape()
 {
-  /* Start MiCO system functions according to mico_config.h*/
-  mico_Context_t* mico_context = (mico_Context_t*) mico_system_context_init( 0 );
-
-  // Work around for configure WiFi now. Web-based config is blocked due to limited resource on MK3165.
-  // Please modify SSID and password to your target WIFI.
-  config_mico_wifi(mico_context, "MSFTLAB", "");
-
-  mico_system_init(mico_context);
-  
-  /* Output on debug serial port */
-  os_helloworld_log( "Hello world! XXXX" );
-
   system_log("A -- Free memory %d bytes", MicoGetMemoryInfo()->free_memory); 
   duk_context *ctx = duk_create_heap_default();
   system_log("B -- Free memory %d bytes", MicoGetMemoryInfo()->free_memory); 
@@ -84,7 +60,25 @@ int application_start( void )
   os_helloworld_log( "EVAL STRING CALLED" );
   duk_destroy_heap(ctx);
   os_helloworld_log( "HEAP DESTROYED");
-  system_log("C -- Free memory %d bytes", MicoGetMemoryInfo()->free_memory); 
+  system_log("C -- Free memory %d bytes", MicoGetMemoryInfo()->free_memory);
+}
+
+int application_start( void )
+{
+  /* Start MiCO system functions according to mico_config.h*/
+  mico_Context_t* mico_context = (mico_Context_t*) mico_system_context_init( 0 );
+
+  iot_custom_init(mico_context);
+
+  mico_system_init(mico_context);
+
+  // start http server thread for WiFi configuration update
+  app_httpd_start();
+
+  /* Output on debug serial port */
+  os_helloworld_log( "Hello world! XXXX" );
+
+  iot_run_duktape();
 
   /* Trigger MiCO system led available on most MiCOKit */
   while(1)
