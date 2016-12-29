@@ -256,7 +256,8 @@ endif()
 set(module_js_files ${module_js_files}
     ./modules/azure-iot-device.js
     ./modules/connectionstring.js
-    ./modules/test.js
+    ./modules/test1.js
+    ./modules/test2.js
     ./modules/protocol.js
     ./modules/message.js
     ./modules/client.js

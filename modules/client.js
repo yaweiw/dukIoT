@@ -10,27 +10,30 @@ this.fromConnectionString = function (connectionstring, protocol) {
         IoTHubClient : new IoTHubClient(connectionstring, protocol),
         open : function (cb) {
              this.IoTHubClientHandle = this.IoTHubClient.fromConnectionString(connectionstring, protocol);
-             print("open: " + this.IoTHubClientHandle);
-             print("open is called!");
-            cb();
+             cb();
         },
         sendEvent : function (message, cb) {
             if(!this.IoTHubClientHandle) {
                 print("IoTHubClient not constructed");
             } else {
-                print("sendEvent: " + this.IoTHubClientHandle);
                 this.IoTHubClient.sendeventasync(this.IoTHubClientHandle, message.getData());
-                print("sendEvent is called!");
             }
             cb();
+        },
+        receive : function (cb) {
+            if(!this.IoTHubClientHandle) {
+                print("IoTHubClient not constructed");
+            } else {
+                var message = this.IoTHubClient.receive(this.IoTHubClientHandle);
+            }
+            cb();
+            return message;
         },
         close : function(cb) {
             if(!this.IoTHubClientHandle) {
                 print("IoTHubClient not constructed");
             } else {
-                print("close: " + this.IoTHubClientHandle);
                 this.IoTHubClient.close(this.IoTHubClientHandle);
-                print("close is called!");
             }
             cb();
         }

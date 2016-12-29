@@ -7,7 +7,7 @@
 #endif
 
 #ifndef do_test
-//#define do_test
+#define do_test
 #endif
 
 #ifdef use_test_runtime
@@ -22,8 +22,8 @@
 
 
 int main(int argc, const char *argv[]) {
-    #ifdef use_test_on
-    printf("use_test_on");
+    #ifdef use_test_runtime
+    (void)printf("use_test_runtime on\r\n");
     #endif
     duk_context *ctx = NULL;
     char line[4096];
@@ -32,7 +32,7 @@ int main(int argc, const char *argv[]) {
 
     ctx = duk_create_heap_default();
     if (!ctx) {
-        printf("Failed to create a Duktape heap.\n");
+        (void)printf("Failed to create a Duktape heap.\n");
         exit(1);
     }
 
@@ -46,23 +46,39 @@ int main(int argc, const char *argv[]) {
     iothubclient_init(ctx);
     #ifdef do_test
     iothubclient_test(ctx);
-    printf("\nFinish test.\n\n");
+    (void)printf("\nFinish test.\n\n");
     #endif
 
-    printf("Register module search function.\n\n");
     if (duk_peval_file(ctx, "modulesearch.js") != 0) {
-        printf("Error: %s\n", duk_safe_to_string(ctx, -1));
+        (void)printf("Error: %s\n", duk_safe_to_string(ctx, -1));
         goto finished;
     }
     duk_pop(ctx);  // ignore result
 
-    printf("Interpret and execute test.js.\n\n");
-    if (duk_peval_file(ctx, "test.js") != 0) {
-        printf("Error: %s\n", duk_safe_to_string(ctx, -1));
-        goto finished;
-    }
-    duk_pop(ctx);  // ignore result
+    (void)printf("Input JS file to execute.\n\n");
+    memset(line, 0, sizeof(line));
+    idx = 0;
+    for (;;) {
+        if (idx >= sizeof(line)) {
+            printf("Line too long\n");
+            exit(1);
+        }
 
+        ch = fgetc(stdin);
+        if (ch == 0x0a) {
+            line[idx++] = '\0';
+            if(strcmp(line, "exit") == 0) {
+                goto finished;
+            }
+            if (duk_peval_file(ctx, line) != 0) {
+                (void)printf("Error: %s\n", duk_safe_to_string(ctx, -1));
+                duk_pop(ctx);  // ignore result
+            }
+            idx = 0;
+        } else {
+            line[idx++] = (char) ch;
+        }
+    }
 finished:
     duk_destroy_heap(ctx);
 
