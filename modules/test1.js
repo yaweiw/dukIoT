@@ -1,8 +1,7 @@
 //var cstr = "<your ConnectionString>";
 var cstr = "HostName=yaweiIotHub.azure-devices.net;DeviceId=yaweiFirstDevice;SharedAccessKey=e3MIeWm8OvVL2zwqiVymLla1uIvsl3vQVO0cFUjoKb8=";
-
 var ConnectionString = require('azure-iot-device').ConnectionString;
-var http = require('azure-iot-device').Protocol.HTTP;
+var mqtt = require('azure-iot-device').Protocol.MQTT;
 var client = require('azure-iot-device').Client;
 var Message = require('azure-iot-device').Message;
 
@@ -11,7 +10,7 @@ print(cn.HostName);
 print(cn.SharedAccessKeyName);
 print(cn.SharedAccessKey);
 
-var iothubclient = client.fromConnectionString(cstr, http);
+var iothubclient = client.fromConnectionString(cstr, mqtt);
 var msg = new Message("some msg data");
 
 function connectCallback (err) {

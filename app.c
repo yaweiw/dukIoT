@@ -41,7 +41,6 @@ int main(int argc, const char *argv[]) {
     duk_push_c_function(ctx, duk_readFile, 1 /*nargs*/);
     duk_put_prop_string(ctx, -2, "readFile");
     duk_pop(ctx);
-    //duk_register(ctx, duk_readFile, "readFile");
 
     iothubclient_init(ctx);
     #ifdef do_test

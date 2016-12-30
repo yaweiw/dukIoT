@@ -1,39 +1,38 @@
 this.ConnectionString;
 this.Protocol;
 this.IoTHubClient;
-this.IoTHubClientHandle;
+this.IoTHubClientLLHandle;
 
 this.fromConnectionString = function (connectionstring, protocol) {
     var obj = {
         ConnectionString : connectionstring,
         Protocol : protocol,
-        IoTHubClient : new IoTHubClient(connectionstring, protocol),
+        IoTHubClient : new IoTHubClient(connectionstring, protocol), // call iothubclient_constructor
         open : function (cb) {
-             this.IoTHubClientHandle = this.IoTHubClient.fromConnectionString(connectionstring, protocol);
+             this.IoTHubClientLLHandle = this.IoTHubClient.fromConnectionString(connectionstring, protocol); // call iothubclient_createfromconnectionstring
              cb();
         },
         sendEvent : function (message, cb) {
-            if(!this.IoTHubClientHandle) {
+            if(!this.IoTHubClientLLHandle) {
                 print("IoTHubClient not constructed");
             } else {
-                this.IoTHubClient.sendeventasync(this.IoTHubClientHandle, message.getData());
+                this.IoTHubClient.sendeventasync(this.IoTHubClientLLHandle, message.getData()); // call iothubclient_sendeventasync
             }
             cb();
         },
-        receive : function (cb) {
-            if(!this.IoTHubClientHandle) {
+        receiveEvent : function () {
+            if(!this.IoTHubClientLLHandle) {
                 print("IoTHubClient not constructed");
             } else {
-                var message = this.IoTHubClient.receive(this.IoTHubClientHandle);
+                var message = this.IoTHubClient.receive(this.IoTHubClientLLHandle); // call iothubclient_receive
             }
-            cb();
             return message;
         },
         close : function(cb) {
-            if(!this.IoTHubClientHandle) {
+            if(!this.IoTHubClientLLHandle) {
                 print("IoTHubClient not constructed");
             } else {
-                this.IoTHubClient.close(this.IoTHubClientHandle);
+                this.IoTHubClient.close(this.IoTHubClientLLHandle); // call iothubclient_destory
             }
             cb();
         }
