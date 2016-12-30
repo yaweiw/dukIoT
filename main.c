@@ -34,8 +34,11 @@
 #include "duktapert/duktape.h"
 #include "wifi_config/app_httpd.h"
 #include "wifi_config/wifi_config.h"
+#include "wifi_config/helper.h"
 
 #define os_helloworld_log(format, ...)  custom_log("helloworld", format, ##__VA_ARGS__)
+
+static char user_js[1024] = "";
 
 void iot_custom_init(mico_Context_t* context)
 {
@@ -47,6 +50,8 @@ void iot_custom_init(mico_Context_t* context)
   {
     os_helloworld_log("Fail to register WIFI connection fail handler.");
   }
+
+  read_file("user.js", user_js, 1024);
 }
 
 void iot_run_duktape()
@@ -80,7 +85,7 @@ int application_start( void )
 
   iot_run_duktape();
 
-  /* Trigger MiCO system led available on most MiCOKit */
+  // Trigger MiCO system led available on most MiCOKit
   while(1)
   {
       MicoGpioOutputTrigger( MICO_SYS_LED );

@@ -1,12 +1,11 @@
-
-$output = "/**
+/**
  ******************************************************************************
  *
  *  The MIT License
  *  Copyright (c) 2016 MXCHIP Inc.
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
- *  of this software and associated documentation files (the `"Software`"), to deal
+ *  of this software and associated documentation files (the "Software"), to deal
  *  in the Software without restriction, including without limitation the rights
  *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  *  copies of the Software, and to permit persons to whom the Software is furnished
@@ -15,7 +14,7 @@ $output = "/**
  *  The above copyright notice and this permission notice shall be included in
  *  all copies or substantial portions of the Software.
  *
- *  THE SOFTWARE IS PROVIDED `"AS IS`", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
@@ -25,17 +24,12 @@ $output = "/**
  ******************************************************************************
  */
 
+int mount_fs();
 
-";
+int unmount_fs();
 
-Get-ChildItem .\web_data -Filter *.html |
-ForEach-Object {
-  $content = Get-Content $_.FullName -Encoding Byte
-  $value_string = ($content | % {"0x{0:X2}" -f $_}) -join ", "
-  $content_string = "const unsigned char {0}[0x{1:X}] = {{`n  {2}`n}};`n`n" -f $_.BaseName, $content.count, $value_string
-  $output = $output + $content_string
-}
+int read_file(char *filename, char *output, size_t output_len);
 
-$output | Set-Content .\web_data.c -Encoding UTF8
+int save_file(char *filename, const char *input);
 
-
+int httpd_get_tag_from_multipart_form(char *inbuf, char *boundary, const char *tag, char *val, unsigned val_len);

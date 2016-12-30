@@ -37,6 +37,7 @@
 #include "mico.h"
 #include "httpd_priv.h"
 #include "app_httpd.h"
+#include "helper.h"
 
 #define app_httpd_log(M, ...) custom_log("apphttpd", M, ##__VA_ARGS__)
 
@@ -63,10 +64,13 @@ static int web_send_result_page(httpd_request_t *req)
 {
   OSStatus err = kNoErr;
   bool para_succ = false;
-  int buf_size = 512;
+  int buf_size = 1536;
   char *buf;
   char value_ssid[maxSsidLen];
   char value_pass[maxKeyLen];
+  int user_code_len = 1024;
+  char *user_code = NULL;
+  char *boundary = NULL;
   mico_Context_t* context = NULL;
   
   context = mico_system_context_get( );
@@ -75,18 +79,40 @@ static int web_send_result_page(httpd_request_t *req)
   
   err = httpd_get_data(req, buf, buf_size);
   require_noerr( err, Save_Out );
-  
-  err = httpd_get_tag_from_post_data(buf, "SSID", value_ssid, maxSsidLen);
-  require_noerr( err, Save_Out );
-  
-  if(!strncmp(value_ssid, "\0", 1))
-    goto Save_Out;
-  
+
+  if (strstr(req->content_type, "multipart/form-data") != NULL) // Post data is multipart encoded
+  {
+    boundary = strstr(req->content_type, "boundary=");
+    boundary += 9;
+    user_code = malloc(user_code_len);
+    err = httpd_get_tag_from_multipart_form(buf, boundary, "usercode", user_code, user_code_len);
+    if (err == kNoErr && strlen(user_code) > 0)
+    {
+      app_httpd_log("user_code: %s", user_code);
+      save_file("user.js", user_code);
+    }
+
+    err = httpd_get_tag_from_multipart_form(buf, boundary, "SSID", value_ssid, maxSsidLen);
+    require_noerr( err, Save_Out );
+
+    if(!strncmp(value_ssid, "\0", 1)) goto Save_Out;
+
+    err = httpd_get_tag_from_multipart_form(buf, boundary, "PASS", value_pass, maxKeyLen);
+    require_noerr( err, Save_Out );
+  }
+  else // Post data is URL encoded
+  {
+    err = httpd_get_tag_from_post_data(buf, "SSID", value_ssid, maxSsidLen);
+    require_noerr( err, Save_Out );
+
+    if(!strncmp(value_ssid, "\0", 1)) goto Save_Out;
+
+    err = httpd_get_tag_from_post_data(buf, "PASS", value_pass, maxKeyLen);
+    require_noerr( err, Save_Out );
+  }
+
   strncpy(context->flashContentInRam.micoSystemConfig.ssid, value_ssid, maxSsidLen);
-  
-  err = httpd_get_tag_from_post_data(buf, "PASS", value_pass, maxKeyLen);
-  require_noerr( err, Save_Out );
-  
+
   strncpy(context->flashContentInRam.micoSystemConfig.key, value_pass, maxKeyLen);
   strncpy(context->flashContentInRam.micoSystemConfig.user_key, value_pass, maxKeyLen);
   context->flashContentInRam.micoSystemConfig.keyLength = strlen(context->flashContentInRam.micoSystemConfig.key);
@@ -126,6 +152,7 @@ Save_Out:
   
 exit:  
   if(buf) free(buf);
+  if(user_code) free(user_code);
   return err; 
 }
 
