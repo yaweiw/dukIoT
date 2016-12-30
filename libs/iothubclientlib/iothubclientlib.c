@@ -268,7 +268,7 @@ void iothubclient_test(duk_context *ctx) {
     strcat(jsstr, "', 'MQTT')");
     duk_eval_string(ctx, jsstr);
     /* ... stack top has result ... */ // [... iothubclientObj ] != IOTHUB_CLIENT_LL_HANDLE
-    #pragma region Check properties
+    #pragma region Check Prop Exist
     /*(void)printf("Check properties exist.\n");
     propExistsInstance(ctx, "connectionstring");
     propExistsInstance(ctx, "protocol");
@@ -280,6 +280,7 @@ void iothubclient_test(duk_context *ctx) {
     #pragma endregion
 
     (void)printf("\nCall object methods.\n");
+    #pragma region fromConnectionString
     duk_get_prop_string(ctx, -1, "fromConnectionString"); // [... iothubclientObj fromConnectionString ]
     duk_dup(ctx, -2); // [... iothubclientObj fromConnectionString iothubclientObj(this) ]
     duk_push_string(ctx, cstr); // [... iothubclientObj fromConnectionString iothubclientObj(this) cstr ]
@@ -290,16 +291,19 @@ void iothubclient_test(duk_context *ctx) {
     (void)printf("[fromConnectionString] handle = %p, \n", handle);
     duk_pop(ctx);
 
-    duk_get_prop_string(ctx, -1, "setoption"); // [... iothubclientObj setoption ]
+
+    #pragma region setoption
+    /*duk_get_prop_string(ctx, -1, "setoption"); // [... iothubclientObj setoption ]
     duk_dup(ctx, -2); // [... iothubclientObj setoption iothubclientObj(this) ]
     duk_push_pointer(ctx, handle); // [... iothubclientObj setoption iothubclientObj(this) iothubclienthandle ]
     duk_push_string(ctx, "logtrace"); // [... iothubclientObj setoption iothubclientObj(this) iothubclienthandle optionName ]
     //unsigned int timeout = 241000;
     bool traceOn = true;
     duk_push_pointer(ctx, &traceOn); // [... iothubclientObj setoption iothubclientObj(this) iothubclienthandle optionName value ]
-    duk_call_method(ctx, 3 /*nargs*/); // [... iothubclientObj IOTHUB_CLIENT_ERROR/OK ]
+    duk_call_method(ctx, 3); // [... iothubclientObj IOTHUB_CLIENT_ERROR/OK ]
     (void)printf("[setoption] %s\n", duk_to_string(ctx, -1));
-    duk_pop(ctx);
+    duk_pop(ctx);*/
+    #pragma endregion
 
     /*duk_get_prop_string(ctx, -1, "sendeventasync");
     duk_dup(ctx, -2);
