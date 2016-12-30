@@ -31,11 +31,11 @@
  ******************************************************************************
  */
 
-extern const unsigned char wififail[0xAC9];
+extern const unsigned char wififail[0xA72];
 
-extern const unsigned char wifisetting[0xD5E];
+extern const unsigned char wifisetting[0x1194];
 
-extern const unsigned char wifisuccess[0x9BC];
+extern const unsigned char wifisuccess[0x978];
 
 int app_httpd_start( void );
 

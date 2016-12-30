@@ -122,6 +122,38 @@ html{font-size:62.5%;}
 	width: 100%;
 	margin:35px 0;
 }
+.input-field.file-selector{
+	padding-top: 0px !important;
+	padding-bottom: 0px !important;
+	padding-right: 0px !important;
+}
+.inputfile{
+	width: 0.1px;
+	height: 0.1px;
+	opacity: 0;
+	overflow: hidden;
+	position: absolute;
+	z-index: -1;
+}
+.inputfile + label{
+	width: 100%;
+	font-size: 14px;
+	line-height: 4;
+}
+.inputfile + label span{
+	max-width: calc(100% - 120px);
+	float: left;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	overflow: hidden;
+}
+.inputfile + label p{
+	min-width: 120px;
+	text-align: center;
+	background-color: #0078d7;
+	color: #FFF;
+	float: right;
+}
 </style>
 
 </head>
@@ -133,7 +165,7 @@ html{font-size:62.5%;}
 		<h3>WiFi Setting</h3>
 	</header>
 	<div class="content">
-	<form action="result.htm" method="post">
+	<form action="result.htm" method="post" enctype="multipart/form-data">
 		<section class="geteway-info-box">
 		<div class="input-field">
 			<input id="ssid" type="text" name="SSID" value="" placeholder="SSID">
@@ -141,10 +173,29 @@ html{font-size:62.5%;}
 		<div class="input-field">
 			<input type="password" name="PASS" value="" placeholder="Password. Leave blank if password is not required.">
 		</div>
+		<div class="input-field file-selector">
+			<input type="file" id="usercode" name="usercode" value="" accept=".js" class="inputfile">
+			<label for="usercode">
+				<span></span>
+				<p>Choose File</p>
+			</label>
+		</div>
 		</section>
-		<section class="geteway-btn"><button type="submit" name="next" class="btn btn-red btn-next">NEXT</button></section>
+		<section class="geteway-btn"><button type="submit" name="next" class="btn btn-red btn-next">SAVE</button></section>
 	</form>
 	</div>
 </div>
+<script>
+var inputs = document.querySelectorAll('.inputfile');
+Array.prototype.forEach.call(inputs, function(input){
+	var label	 = input.nextElementSibling;
+	input.addEventListener('change', function(e){
+		var fileName = e.target.value.split( '\\' ).pop();
+		if (fileName) {
+			label.querySelector( 'span' ).innerHTML = fileName;
+		}
+	});
+});
+</script>
 </body>
 </html>

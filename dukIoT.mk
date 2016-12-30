@@ -27,6 +27,9 @@ NAME := App_Helloworld
 $(NAME)_SOURCES := main.c /duktapert/duktape.c \
   /wifi_config/app_httpd.c \
   /wifi_config/wifi_config.c \
+  /wifi_config/helper.c \
   /wifi_config/web_data.c
 
-$(NAME)_COMPONENTS += daemons/http_server
+$(NAME)_COMPONENTS += daemons/http_server \
+  filesystem.FatFs.src \
+  filesystem.FatFs.src.drivers
