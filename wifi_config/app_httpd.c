@@ -39,6 +39,7 @@
 #include "app_httpd.h"
 #include "helper.h"
 
+#define MAX_USER_CODE_LEN 2048
 #define app_httpd_log(M, ...) custom_log("apphttpd", M, ##__VA_ARGS__)
 
 #define HTTPD_HDR_DEFORT (HTTPD_HDR_ADD_SERVER|HTTPD_HDR_ADD_CONN_CLOSE|HTTPD_HDR_ADD_PRAGMA_NO_CACHE)
@@ -64,11 +65,10 @@ static int web_send_result_page(httpd_request_t *req)
 {
   OSStatus err = kNoErr;
   bool para_succ = false;
-  int buf_size = 1536;
+  int buf_size = 512 + MAX_USER_CODE_LEN;
   char *buf;
   char value_ssid[maxSsidLen];
   char value_pass[maxKeyLen];
-  int user_code_len = 1024;
   char *user_code = NULL;
   char *boundary = NULL;
   mico_Context_t* context = NULL;
@@ -78,18 +78,21 @@ static int web_send_result_page(httpd_request_t *req)
   buf = malloc(buf_size);
   
   err = httpd_get_data(req, buf, buf_size);
+  app_httpd_log("httpd_get_data return value: %d", err);
   require_noerr( err, Save_Out );
 
   if (strstr(req->content_type, "multipart/form-data") != NULL) // Post data is multipart encoded
   {
     boundary = strstr(req->content_type, "boundary=");
     boundary += 9;
-    user_code = malloc(user_code_len);
-    err = httpd_get_tag_from_multipart_form(buf, boundary, "usercode", user_code, user_code_len);
+    user_code = malloc(MAX_USER_CODE_LEN);
+    err = httpd_get_tag_from_multipart_form(buf, boundary, "usercode", user_code, MAX_USER_CODE_LEN);
+    // Update Custom JS file
     if (err == kNoErr && strlen(user_code) > 0)
     {
       app_httpd_log("user_code: %s", user_code);
       save_file("user.js", user_code);
+      para_succ = true;
     }
 
     err = httpd_get_tag_from_multipart_form(buf, boundary, "SSID", value_ssid, maxSsidLen);
@@ -111,8 +114,8 @@ static int web_send_result_page(httpd_request_t *req)
     require_noerr( err, Save_Out );
   }
 
+  // Update WIFI setting
   strncpy(context->flashContentInRam.micoSystemConfig.ssid, value_ssid, maxSsidLen);
-
   strncpy(context->flashContentInRam.micoSystemConfig.key, value_pass, maxKeyLen);
   strncpy(context->flashContentInRam.micoSystemConfig.user_key, value_pass, maxKeyLen);
   context->flashContentInRam.micoSystemConfig.keyLength = strlen(context->flashContentInRam.micoSystemConfig.key);
@@ -122,7 +125,9 @@ static int web_send_result_page(httpd_request_t *req)
   memset(context->flashContentInRam.micoSystemConfig.bssid, 0x0, 6);
   context->flashContentInRam.micoSystemConfig.security = SECURITY_TYPE_AUTO;
   context->flashContentInRam.micoSystemConfig.dhcpEnable = true;
-  
+
+  context->flashContentInRam.micoSystemConfig.configured = allConfigured;
+  mico_system_context_update(context);
   para_succ = true;
   
 Save_Out:
@@ -131,14 +136,10 @@ Save_Out:
   {
     err = httpd_send_all_header(req, HTTP_RES_200, sizeof(wifisuccess), HTTP_CONTENT_HTML_STR);
     require_noerr_action( err, exit, app_httpd_log("ERROR: Unable to send http wifisuccess headers.") );
-    
+
     err = httpd_send_body(req->sock, wifisuccess, sizeof(wifisuccess));
     require_noerr_action( err, exit, app_httpd_log("ERROR: Unable to send http wifisuccess body.") );
-    
-    context->flashContentInRam.micoSystemConfig.configured = allConfigured;
-    
-    mico_system_context_update(context);
-    
+
     mico_system_power_perform( context, eState_Software_Reset );
   }
   else

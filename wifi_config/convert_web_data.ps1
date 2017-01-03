@@ -32,7 +32,7 @@ Get-ChildItem .\web_data -Filter *.html |
 ForEach-Object {
   $content = Get-Content $_.FullName -Encoding Byte
   $value_string = ($content | % {"0x{0:X2}" -f $_}) -join ", "
-  $content_string = "const unsigned char {0}[0x{1:X}] = {{`n  {2}`n}};`n`n" -f $_.BaseName, $content.count, $value_string
+  $content_string = "const unsigned char {0}[{1}] = {{`n  {2}`n}};`n`n" -f $_.BaseName, $content.count, $value_string
   $output = $output + $content_string
 }
 
