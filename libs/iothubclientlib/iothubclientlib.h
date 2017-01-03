@@ -14,10 +14,18 @@ extern "C" {
     void iothubclient_init(duk_context *ctx);
     void iothubclient_test(duk_context *ctx);
 
+    typedef struct PROPERTY_TAG
+    {
+        char* key;
+        char* value;
+    } PROPERTY, *PROPERTY_HANDLE;
+
     typedef struct MESSAGE_DATA_TAG
     {
-        char* data;
-        size_t size;
+        char* message;
+        size_t length;
+        PROPERTY_HANDLE* properties;
+        size_t count;
     } MESSAGE_DATA, *MESSAGE_DATA_HANDLE;
 #ifdef __cplusplus
 }

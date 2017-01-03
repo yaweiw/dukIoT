@@ -66,7 +66,7 @@ int main(int argc, const char *argv[]) {
         ch = fgetc(stdin);
         if (ch == 0x0a) {
             line[idx++] = '\0';
-            if(strcmp(line, "exit") == 0) {
+            if(strcmp(line, "quit") == 0) {
                 goto finished;
             }
             if (duk_peval_file(ctx, line) != 0) {

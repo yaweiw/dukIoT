@@ -16,8 +16,7 @@
 
 #define DOWORK_LOOP_NUM     3
 
-//const char* cstr = "<your ConnectionString>";
-const char* cstr = "HostName=yaweiIotHub.azure-devices.net;DeviceId=yaweiFirstDevice;SharedAccessKey=e3MIeWm8OvVL2zwqiVymLla1uIvsl3vQVO0cFUjoKb8=";
+const char* cstr = "<your ConnectionString>";
 
 duk_ret_t iothubclient_createfromconnectionstring(duk_context *ctx)
 {

@@ -15,11 +15,11 @@
 #include "iothubclientlib.h"
 
 #define DOWORK_LOOP_NUM     3
+#define MAX_IOTHUB_MESSAGE_SIZE 1024 * 64
 
-//const char* cstr = "<your ConnectionString>";
-const char* cstr = "HostName=yaweiIotHub.azure-devices.net;DeviceId=yaweiFirstDevice;SharedAccessKey=e3MIeWm8OvVL2zwqiVymLla1uIvsl3vQVO0cFUjoKb8=";
+const char* cstr = "<your ConnectionString>";
 
-static IOTHUBMESSAGE_DISPOSITION_RESULT receivemessage_callback(IOTHUB_MESSAGE_HANDLE message, void* userContextCallback)
+static IOTHUBMESSAGE_DISPOSITION_RESULT receivemessage_callback(IOTHUB_MESSAGE_HANDLE iothubmessage, void* userContextCallback)
 {
     const char* buffer;
     duk_context *ctx = userContextCallback;
@@ -27,15 +27,54 @@ static IOTHUBMESSAGE_DISPOSITION_RESULT receivemessage_callback(IOTHUB_MESSAGE_H
     size_t buffersize;
     //MAP_HANDLE mapProperties;
 
-    if (IoTHubMessage_GetByteArray(message, (const unsigned char**)&buffer, &buffersize) != IOTHUB_MESSAGE_OK) {
+    if (IoTHubMessage_GetByteArray(iothubmessage, (const unsigned char**)&buffer, &buffersize) != IOTHUB_MESSAGE_OK) {
         (void)printf("unable to retrieve the message data\r\n");
         return IOTHUBMESSAGE_REJECTED;
     } else {
         if ((messageHandle = (MESSAGE_DATA_HANDLE)malloc(sizeof(MESSAGE_DATA))) != NULL) {
-            messageHandle->size = buffersize;
-            if((messageHandle->data = (char*)malloc(buffersize + 1)) != NULL) {
-                memcpy(messageHandle->data, buffer, buffersize + 1);
-                messageHandle->data[buffersize] = '\0';
+            messageHandle->length = buffersize;
+            if((messageHandle->message = (char*)malloc(buffersize + 1)) != NULL) {
+                memcpy(messageHandle->message, buffer, buffersize + 1);
+                messageHandle->message[buffersize] = '\0';
+                // get properties
+                MAP_HANDLE mapProperties = IoTHubMessage_Properties(iothubmessage);
+                if (mapProperties != NULL)
+                {
+                    const char*const* keys;
+                    const char*const* values;
+                    size_t propertyCount = 0;
+                    if (Map_GetInternals(mapProperties, &keys, &values, &propertyCount) == MAP_OK)
+                    {
+                        if (propertyCount > 0)
+                        {
+                            messageHandle->count = propertyCount;
+                            // allocate space for properties
+                            messageHandle->properties = (PROPERTY_HANDLE*)malloc(sizeof(PROPERTY_HANDLE));
+
+                            for (size_t index = 0; index < propertyCount; index++)
+                            {
+                                // allocate space for properties[index]
+                                messageHandle->properties[index] = (PROPERTY_HANDLE)malloc(sizeof(PROPERTY));
+
+                                // allocate space for properties[index]->key
+                                size_t keyLen = strlen(keys[index]) + 1;
+                                messageHandle->properties[index]->key = (char*)malloc(keyLen);
+                                memcpy(messageHandle->properties[index]->key, keys[index], keyLen);
+                                messageHandle->properties[index]->key[keyLen] = '\0';
+
+                                // allocate space for properties[index]->value
+                                size_t valLen = strlen(values[index]) + 1;
+                                messageHandle->properties[index]->value = (char*)malloc(valLen);
+                                memcpy(messageHandle->properties[index]->value, values[index], valLen);
+                                messageHandle->properties[index]->value[valLen] = '\0';
+
+                                //(void)printf("\tKey: %s Value: %s\r\n", keys[index], values[index]);
+
+                            }
+                        }
+                    }
+                }
+
                 duk_push_global_object(ctx);
                 duk_push_pointer(ctx, messageHandle);
                 (void)duk_put_global_string(ctx, "MESSAGE_DATA_HANDLE");
@@ -54,40 +93,13 @@ static IOTHUBMESSAGE_DISPOSITION_RESULT receivemessage_callback(IOTHUB_MESSAGE_H
             return IOTHUBMESSAGE_REJECTED;
         }
     }
-/*
-    // Retrieve properties from the message
-    mapProperties = IoTHubMessage_Properties(message);
-    if (mapProperties != NULL)
-    {
-        const char*const* keys;
-        const char*const* values;
-        size_t propertyCount = 0;
-        if (Map_GetInternals(mapProperties, &keys, &values, &propertyCount) == MAP_OK)
-        {
-            if (propertyCount > 0)
-            {
-                size_t index;
-
-                printf("Message Properties:\r\n");
-                for (index = 0; index < propertyCount; index++)
-                {
-                    printf("\tKey: %s Value: %s\r\n", keys[index], values[index]);
-                }
-                printf("\r\n");
-            }
-        }
-    }
-
-    // Some device specific action code goes here...
-    (*counter)++;
-    */
     return IOTHUBMESSAGE_ACCEPTED;
 }
 
 duk_ret_t iothubclient_createfromconnectionstring(duk_context *ctx)
 {
     // [cs protocol]
-    const char* cs = duk_to_string(ctx, -2);
+    const char* constr = duk_to_string(ctx, -2);
     const char* protocol = duk_to_string(ctx, -1);
 
     IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle;
@@ -96,15 +108,19 @@ duk_ret_t iothubclient_createfromconnectionstring(duk_context *ctx)
         (void)printf("Failed to initialize the platform.\r\n");
         return 0;
     } else {
-        if ((iotHubClientHandle = IoTHubClient_LL_CreateFromConnectionString(cs, MQTT_Protocol)) == NULL) {
+        if ((iotHubClientHandle = IoTHubClient_LL_CreateFromConnectionString(constr, MQTT_Protocol)) == NULL) {
             (void)printf("ERROR: iotHubClientHandle is NULL!\r\n");
             return 0;
         }
-        // MESSAGE_DATA_HANDLE messageHandle = NULL;
         /* Setting Message call back, so we can receive Commands. */
         if (IoTHubClient_LL_SetMessageCallback(iotHubClientHandle, receivemessage_callback, ctx) != IOTHUB_CLIENT_OK) {
             (void)printf("ERROR: IoTHubClient_LL_SetMessageCallback..........FAILED!\r\n");
+            return 0;
         }
+        // set message call back
+        IoTHubClient_LL_DoWork(iotHubClientHandle);
+        // set callback needs time 1s is required
+        ThreadAPI_Sleep(1000);
         // set MESSAGE_DATA_HANDLE prop NULL
         duk_push_global_object(ctx);
         duk_push_pointer(ctx, NULL);
@@ -171,7 +187,32 @@ duk_ret_t iothubclient_receive(duk_context *ctx) {
         duk_push_global_object(ctx);
         duk_push_pointer(ctx, NULL);
         (void)duk_put_global_string(ctx, "MESSAGE_DATA_HANDLE");
-        duk_push_string(ctx, messageHandle->data);
+
+        // max cloud to device message size 64k
+        char* messageinJson = (char*)malloc(sizeof(char) * MAX_IOTHUB_MESSAGE_SIZE);
+        memset(messageinJson, 0, sizeof(char) * MAX_IOTHUB_MESSAGE_SIZE);
+        //{	"message": "abab",
+        strcpy(messageinJson, "{\"message\":\"");
+        strcat(messageinJson, messageHandle->message);
+        strcat(messageinJson, "\",\"properties\": {");
+        // add all properties key value
+        for(size_t index = 0; index < messageHandle->count; index++)
+        {
+            strcat(messageinJson, "\"");
+            // key
+            strcat(messageinJson, messageHandle->properties[index]->key);
+            strcat(messageinJson, "\":\"");
+            // value
+            strcat(messageinJson, messageHandle->properties[index]->key);
+            if(index == messageHandle->count - 1) {
+                strcat(messageinJson, "\"}");
+            } else {
+                strcat(messageinJson, "\",");
+            }
+        }
+        //"}"
+        strcat(messageinJson, "}");
+        duk_push_string(ctx, messageinJson);
         return 1;
     }
     else {
@@ -259,7 +300,6 @@ void iothubclient_init(duk_context *ctx) {
 void iothubclient_test(duk_context *ctx) {
     iothubclient_init(ctx);
 
-    (void)printf("Test creation of a new object from Ecmascript code.\n");
     /* Test creation of a new object from Ecmascript code. */
     char jsstr[1024];
     memset(jsstr, 0, 1024);
@@ -279,18 +319,17 @@ void iothubclient_test(duk_context *ctx) {
     propExistsInstance(ctx, "close");*/
     #pragma endregion
 
-    (void)printf("\nCall object methods.\n");
     #pragma region fromConnectionString
     duk_get_prop_string(ctx, -1, "fromConnectionString"); // [... iothubclientObj fromConnectionString ]
     duk_dup(ctx, -2); // [... iothubclientObj fromConnectionString iothubclientObj(this) ]
     duk_push_string(ctx, cstr); // [... iothubclientObj fromConnectionString iothubclientObj(this) cstr ]
     duk_push_string(ctx, "MQTT"); // [... iothubclientObj fromConnectionString iothubclientObj(this) cstr "MQTT" ]
-    duk_call_method(ctx, 2 /*nargs*/); // [... iothubclientObj iothubclienthandle ]
-    /*stack top has the pointer to IOTHUB_CLIENT_LL_HANDLE*/
+    duk_call_method(ctx, 2); // [... iothubclientObj iothubclienthandle ]
+    //stack top has the pointer to IOTHUB_CLIENT_LL_HANDLE
     IOTHUB_CLIENT_LL_HANDLE handle = (IOTHUB_CLIENT_LL_HANDLE)duk_get_pointer(ctx, -1);
     (void)printf("[fromConnectionString] handle = %p, \n", handle);
     duk_pop(ctx);
-
+    #pragma endregion
 
     #pragma region setoption
     /*duk_get_prop_string(ctx, -1, "setoption"); // [... iothubclientObj setoption ]
@@ -305,17 +344,20 @@ void iothubclient_test(duk_context *ctx) {
     duk_pop(ctx);*/
     #pragma endregion
 
-    /*duk_get_prop_string(ctx, -1, "sendeventasync");
+    #pragma region sendeventasync
+    duk_get_prop_string(ctx, -1, "sendeventasync");
     duk_dup(ctx, -2);
     duk_push_pointer(ctx, handle);
     duk_push_string(ctx, "mymessage");
     duk_call_method(ctx, 2);
     (void)printf("[sendeventasync] %s\n", duk_to_string(ctx, -1));
-    duk_pop(ctx);*/
+    duk_pop(ctx);
+    #pragma endregion
 
     char c;
+    #pragma region receive
     do {
-        (void)printf("Send a cloud-to-device message to be received...");
+        (void)printf("Now send a cloud-to-device message to be received...");
         scanf("%c", &c);
 
         //duk_get_prop_string(ctx, -1, "receive");
@@ -323,18 +365,16 @@ void iothubclient_test(duk_context *ctx) {
         //duk_push_pointer(ctx, handle);
         //duk_call_method(ctx, 1);
 
-        // withouth iothubclient.sendeventasync(IoTHubClientLLHandle, '123');
-        duk_push_string(ctx, "var cstr = 'HostName=yaweiIotHub.azure-devices.net;DeviceId=yaweiFirstDevice;SharedAccessKey=e3MIeWm8OvVL2zwqiVymLla1uIvsl3vQVO0cFUjoKb8=';var iothubclient = new IoTHubClient(cstr, 'MQTT');var IoTHubClientLLHandle = iothubclient.fromConnectionString(cstr, 'MQTT');");
-        duk_eval(ctx);
-        duk_push_string(ctx, "iothubclient.sendeventasync(IoTHubClientLLHandle, '123');");
-        duk_eval(ctx);
-        duk_push_string(ctx, "iothubclient.receive(IoTHubClientLLHandle);");
-        duk_eval(ctx);
+        duk_eval_string(ctx, "var cstr = '<your ConnectionString>'");
+        duk_eval_string(ctx, "var iothubclient = new IoTHubClient(cstr, 'MQTT')");
+        duk_eval_string(ctx, "var IoTHubClientLLHandle = iothubclient.fromConnectionString(cstr, 'MQTT');");
+        duk_eval_string(ctx, "iothubclient.receive(IoTHubClientLLHandle);");
 
         // messagehandle is in global object labelled "messageHandle"
-        (void)printf("[receiveEvent] %s\n", duk_to_string(ctx, -1));
+        (void)printf("[receive] %s\n", duk_to_string(ctx, -1));
         duk_pop(ctx);  /* pop call result */
     } while(c != 'q');
+    #pragma endregion
 
     duk_eval_string(ctx, jsstr);
     duk_get_prop_string(ctx, -1, "close");
