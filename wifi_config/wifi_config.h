@@ -29,3 +29,4 @@
 void iot_config_wifi(mico_Context_t* context, char* ssid, char* pass);
 
 void iot_connect_fail_handler(OSStatus err, mico_Context_t * const context);
+void iot_wifi_status_handler(WiFiEvent status, mico_Context_t * const context);

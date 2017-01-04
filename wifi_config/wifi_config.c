@@ -25,6 +25,7 @@
  */
 
 #include "wifi_config.h"
+#include "micokit_ext.h"
 
 #define os_wifi_config_log(format, ...)  custom_log("wifi_config", format, ##__VA_ARGS__)
 
@@ -54,11 +55,62 @@ void iot_config_wifi(mico_Context_t* context, char* ssid, char* pass)
   mico_system_context_update(context);
 }
 
+void iot_show_ip_address(const char* ip)
+{
+  char oled_show_line[OLED_DISPLAY_MAX_CHAR_PER_ROW+1] = {'\0'};   // max char each line
+  // Display IP in serial log
+  os_wifi_config_log("Device IP: %s", ip);
+  // Display IP at OLED
+  snprintf(oled_show_line, OLED_DISPLAY_MAX_CHAR_PER_ROW+1, "@%s", ip);
+  OLED_ShowString(OLED_DISPLAY_COLUMN_START, OLED_DISPLAY_ROW_4, oled_show_line);
+}
+
+void iot_blink_rgb_led(u_int8_t r, u_int8_t g, u_int8_t b, u_int8_t times)
+{
+  rgb_led_init();
+  u_int8_t i = 0;
+  while (i < times)
+  {
+    i++;
+    rgb_led_open(r, g, b);
+    mico_thread_msleep(500);
+    rgb_led_open(0, 0, 0);
+    mico_thread_msleep(500);
+  }
+}
+
 void iot_connect_fail_handler(OSStatus err, mico_Context_t * const context)
 {
   os_wifi_config_log("Wlan Connection Err %d", err);
   os_wifi_config_log("Erase WiFi setting and reset device.");
   context->flashContentInRam.micoSystemConfig.configured = unConfigured;
   mico_system_context_update(context);
+
+  OLED_ShowString(OLED_DISPLAY_COLUMN_START, OLED_DISPLAY_ROW_4, "WiFi Connect ERR");
+  iot_blink_rgb_led(255, 0, 0, 3); // Blink red LED
+
   mico_system_power_perform(context, eState_Software_Reset);
+}
+
+void iot_wifi_status_handler(WiFiEvent status, mico_Context_t * const context)
+{
+  switch(status)
+  {
+    case NOTIFY_STATION_UP:
+      iot_show_ip_address(context->micoStatus.localIp);
+      iot_blink_rgb_led(0, 255, 0, 3);  // Blink green LED
+      break;
+    case NOTIFY_AP_UP:
+      iot_show_ip_address("10.10.10.1");
+      iot_blink_rgb_led(0, 0, 255, 3);  // Blink blue LED
+      break;
+    case NOTIFY_STATION_DOWN:
+      OLED_ShowString(OLED_DISPLAY_COLUMN_START, OLED_DISPLAY_ROW_4, "Station Down...");
+      iot_blink_rgb_led(255, 0, 0, 3); // Blink red LED
+      break;
+    case NOTIFY_AP_DOWN:
+      OLED_ShowString(OLED_DISPLAY_COLUMN_START, OLED_DISPLAY_ROW_4, "AP Down...");
+      iot_blink_rgb_led(255, 0, 0, 3); // Blink red LED
+      break;
+  }
 }

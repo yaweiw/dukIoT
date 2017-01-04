@@ -45,10 +45,11 @@ void iot_custom_init(mico_Context_t* context)
   // Uncomment below line to hard code the WiFi you want to connect. Then the device won't go into AP mode.
   //iot_config_wifi(context, "MSFTLAB", "");
 
-  OSStatus err = mico_system_notify_register(mico_notify_WIFI_CONNECT_FAILED, (void *)iot_connect_fail_handler, context);
-  if (err != kNoErr)
+  OSStatus err1 = mico_system_notify_register(mico_notify_WIFI_CONNECT_FAILED, (void *)iot_connect_fail_handler, context);
+  OSStatus err2 = mico_system_notify_register(mico_notify_WIFI_STATUS_CHANGED, (void *)iot_wifi_status_handler, context);
+  if (err1 != kNoErr || err2 != kNoErr)
   {
-    os_helloworld_log("Fail to register WIFI connection fail handler.");
+    os_helloworld_log("Fail to register WIFI setup handler.");
   }
 
   read_file("user.js", user_js, 2048);
