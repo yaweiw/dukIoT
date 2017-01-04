@@ -6,20 +6,14 @@
 #define use_test_runtime
 #endif
 
-#ifndef do_test
-#define do_test
-#endif
-
 #ifdef use_test_runtime
 #include "duktapert/testrt/duktape.h"
 #else
 #include "duktapert/duktape.h"
 #endif
 
-#include "libs/iothubclientlib/iothubclientlib.h"
+#include "libs/iothubclientmqttlib/iothubclientmqttlib.h"
 #include "helper/helper.h"
-
-
 
 int main(int argc, const char *argv[]) {
     #ifdef use_test_runtime
@@ -43,10 +37,6 @@ int main(int argc, const char *argv[]) {
     duk_pop(ctx);
 
     iothubclient_init(ctx);
-    #ifdef do_test
-    iothubclient_test(ctx);
-    (void)printf("\nFinish test.\n\n");
-    #endif
 
     if (duk_peval_file(ctx, "modulesearch.js") != 0) {
         (void)printf("Error: %s\n", duk_safe_to_string(ctx, -1));

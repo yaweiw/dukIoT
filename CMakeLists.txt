@@ -244,10 +244,11 @@ endif()
 add_subdirectory(libs)
 add_subdirectory(duktapert)
 add_subdirectory(helper)
+add_subdirectory(tests)
 
 # add the executable
 add_executable(App app.c)
-target_link_libraries (App duktapert iothubclientlib helper)
+target_link_libraries (App duktapert iothubclientmqttlib helper)
 
 if (NOT DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY OR CMAKE_RUNTIME_OUTPUT_DIRECTORY STREQUAL "")
     SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
@@ -269,5 +270,34 @@ set(module_js_files ${module_js_files}
 file (COPY ${module_js_files} DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Debug)
 file (COPY ${module_js_files} DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Release)
 
+
 # add the install targets
 install (TARGETS App DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+
+# tests
+
+set(HOSTNAME "HostName=<yourhost>.azure-devices.net")
+set(DEVID "DeviceId=<yourdevice>")
+set(SAK "SharedAccessKey=<yourkey>")
+
+#define a macro to simplify adding tests
+macro (do_test name_ut arg1 arg2 arg3 arg4 result)
+  add_test (${name_ut}_${arg1} tests/iothubclientmqttlib_ut/${name_ut} ${arg1} ${arg2} ${arg3} ${arg4})
+  set_tests_properties (${name_ut}_${arg1}
+    PROPERTIES PASS_REGULAR_EXPRESSION ${result}
+    )
+endmacro (do_test)
+
+# do a bunch of result based tests
+do_test (iothubclientmqttlib_ut "propertycheck_connectionstring" ${HOSTNAME} ${DEVID} ${SAK} "HostName=.*;DeviceId=.*;SharedAccessKey=.*")
+do_test (iothubclientmqttlib_ut "propertycheck_protocol" ${HOSTNAME} ${DEVID} ${SAK} "MQTT")
+do_test (iothubclientmqttlib_ut "propertycheck_receive" ${HOSTNAME} ${DEVID} ${SAK} "function.*")
+do_test (iothubclientmqttlib_ut "propertycheck_sendeventasync" ${HOSTNAME} ${DEVID} ${SAK} "function.*")
+do_test (iothubclientmqttlib_ut "propertycheck_setoption" ${HOSTNAME} ${DEVID} ${SAK} "function.*")
+do_test (iothubclientmqttlib_ut "propertycheck_fromConnectionString" ${HOSTNAME} ${DEVID} ${SAK} "function.*")
+
+do_test (iothubclientmqttlib_ut "fromconnectionstring" ${HOSTNAME} ${DEVID} ${SAK} "Info.*[\r\n\t ]*.*SUCCEEDED")
+do_test (iothubclientmqttlib_ut "setoption" ${HOSTNAME} ${DEVID} ${SAK} "Info.*[\r\n\t ]*IOTHUB_CLIENT_OK")
+do_test (iothubclientmqttlib_ut "sendeventasync" ${HOSTNAME} ${DEVID} ${SAK} "Info.*[\r\n\t ]*IoT.*accepted.*[\r\n\t ]*IoT.*confirmed.*")
+do_test (iothubclientmqttlib_ut "receive" ${HOSTNAME} ${DEVID} ${SAK} "Info.*[\r\n\t ]*{\"message.*}")
+

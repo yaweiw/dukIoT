@@ -6,13 +6,11 @@
 #include "azure_c_shared_utility/platform.h"
 #include "iothub_client_ll.h"
 #include "iothub_message.h"
-//#include "iothubtransporthttp.h"
 #include "iothubtransportmqtt.h"
-//#include "iothubtransportamqp.h"
 #include "iothubtransport_amqp_common.h"
 #include <string.h>
 
-#include "iothubclientlib.h"
+#include "iothubclientmqttlib.h"
 
 #define DOWORK_LOOP_NUM     3
 #define MAX_IOTHUB_MESSAGE_SIZE 1024 * 64
@@ -25,7 +23,6 @@ static IOTHUBMESSAGE_DISPOSITION_RESULT receivemessage_callback(IOTHUB_MESSAGE_H
     duk_context *ctx = userContextCallback;
     MESSAGE_DATA_HANDLE messageHandle = NULL;
     size_t buffersize;
-    //MAP_HANDLE mapProperties;
 
     if (IoTHubMessage_GetByteArray(iothubmessage, (const unsigned char**)&buffer, &buffersize) != IOTHUB_MESSAGE_OK) {
         (void)printf("unable to retrieve the message data\r\n");
@@ -67,9 +64,6 @@ static IOTHUBMESSAGE_DISPOSITION_RESULT receivemessage_callback(IOTHUB_MESSAGE_H
                                 messageHandle->properties[index]->value = (char*)malloc(valLen);
                                 memcpy(messageHandle->properties[index]->value, values[index], valLen);
                                 messageHandle->properties[index]->value[valLen] = '\0';
-
-                                //(void)printf("\tKey: %s Value: %s\r\n", keys[index], values[index]);
-
                             }
                         }
                     }
@@ -255,10 +249,8 @@ duk_ret_t iothubclient_sendeventasync(duk_context *ctx) {
     } else {
         if(IoTHubClient_LL_SendEventAsync(iotHubClientHandle, iotHubMessage, sendconfirmation_callback, (void *)iotHubMessage) != IOTHUB_CLIENT_OK) {
             (void)printf("ERROR: IoTHubClient_LL_SendEventAsync..........FAILED!\r\n");
-            duk_push_string(ctx, "IOTHUB_CLIENT_ERROR");
         } else {
             (void)printf("IoTHubClient_LL_SendEventAsync accepted message for transmission to IoT Hub.\r\n");
-            duk_push_string(ctx, "IOTHUB_CLIENT_OK");
         }
         // make sure message is sent
         IOTHUB_CLIENT_STATUS status;
@@ -268,7 +260,7 @@ duk_ret_t iothubclient_sendeventasync(duk_context *ctx) {
             ThreadAPI_Sleep(100);
         }
     }
-    return 1;
+    return 0;
 }
 
 void iothubclient_init(duk_context *ctx) {
@@ -297,91 +289,3 @@ void iothubclient_init(duk_context *ctx) {
     duk_put_global_string(ctx, "IoTHubClient");  /* -> stack: [ ] */
 }
 
-void iothubclient_test(duk_context *ctx) {
-    iothubclient_init(ctx);
-
-    /* Test creation of a new object from Ecmascript code. */
-    char jsstr[1024];
-    memset(jsstr, 0, 1024);
-    strcpy(jsstr, "new IoTHubClient('");
-    strcat(jsstr, cstr);
-    strcat(jsstr, "', 'MQTT')");
-    duk_eval_string(ctx, jsstr);
-    /* ... stack top has result ... */ // [... iothubclientObj ] != IOTHUB_CLIENT_LL_HANDLE
-    #pragma region Check Prop Exist
-    /*(void)printf("Check properties exist.\n");
-    propExistsInstance(ctx, "connectionstring");
-    propExistsInstance(ctx, "protocol");
-    propExistsInstance(ctx, "receive");
-    propExistsInstance(ctx, "sendeventasync");
-    propExistsInstance(ctx, "setoption");
-    propExistsInstance(ctx, "fromConnectionString");
-    propExistsInstance(ctx, "close");*/
-    #pragma endregion
-
-    #pragma region fromConnectionString
-    duk_get_prop_string(ctx, -1, "fromConnectionString"); // [... iothubclientObj fromConnectionString ]
-    duk_dup(ctx, -2); // [... iothubclientObj fromConnectionString iothubclientObj(this) ]
-    duk_push_string(ctx, cstr); // [... iothubclientObj fromConnectionString iothubclientObj(this) cstr ]
-    duk_push_string(ctx, "MQTT"); // [... iothubclientObj fromConnectionString iothubclientObj(this) cstr "MQTT" ]
-    duk_call_method(ctx, 2); // [... iothubclientObj iothubclienthandle ]
-    //stack top has the pointer to IOTHUB_CLIENT_LL_HANDLE
-    IOTHUB_CLIENT_LL_HANDLE handle = (IOTHUB_CLIENT_LL_HANDLE)duk_get_pointer(ctx, -1);
-    (void)printf("[fromConnectionString] handle = %p, \n", handle);
-    duk_pop(ctx);
-    #pragma endregion
-
-    #pragma region setoption
-    /*duk_get_prop_string(ctx, -1, "setoption"); // [... iothubclientObj setoption ]
-    duk_dup(ctx, -2); // [... iothubclientObj setoption iothubclientObj(this) ]
-    duk_push_pointer(ctx, handle); // [... iothubclientObj setoption iothubclientObj(this) iothubclienthandle ]
-    duk_push_string(ctx, "logtrace"); // [... iothubclientObj setoption iothubclientObj(this) iothubclienthandle optionName ]
-    //unsigned int timeout = 241000;
-    bool traceOn = true;
-    duk_push_pointer(ctx, &traceOn); // [... iothubclientObj setoption iothubclientObj(this) iothubclienthandle optionName value ]
-    duk_call_method(ctx, 3); // [... iothubclientObj IOTHUB_CLIENT_ERROR/OK ]
-    (void)printf("[setoption] %s\n", duk_to_string(ctx, -1));
-    duk_pop(ctx);*/
-    #pragma endregion
-
-    #pragma region sendeventasync
-    duk_get_prop_string(ctx, -1, "sendeventasync");
-    duk_dup(ctx, -2);
-    duk_push_pointer(ctx, handle);
-    duk_push_string(ctx, "mymessage");
-    duk_call_method(ctx, 2);
-    (void)printf("[sendeventasync] %s\n", duk_to_string(ctx, -1));
-    duk_pop(ctx);
-    #pragma endregion
-
-    char c;
-    #pragma region receive
-    do {
-        (void)printf("Now send a cloud-to-device message to be received...");
-        scanf("%c", &c);
-
-        //duk_get_prop_string(ctx, -1, "receive");
-        //duk_dup(ctx, -2);
-        //duk_push_pointer(ctx, handle);
-        //duk_call_method(ctx, 1);
-
-        duk_eval_string(ctx, "var cstr = '<your ConnectionString>'");
-        duk_eval_string(ctx, "var iothubclient = new IoTHubClient(cstr, 'MQTT')");
-        duk_eval_string(ctx, "var IoTHubClientLLHandle = iothubclient.fromConnectionString(cstr, 'MQTT');");
-        duk_eval_string(ctx, "iothubclient.receive(IoTHubClientLLHandle);");
-
-        // messagehandle is in global object labelled "messageHandle"
-        (void)printf("[receive] %s\n", duk_to_string(ctx, -1));
-        duk_pop(ctx);  /* pop call result */
-    } while(c != 'q');
-    #pragma endregion
-
-    duk_eval_string(ctx, jsstr);
-    duk_get_prop_string(ctx, -1, "close");
-    duk_dup(ctx, -2);
-    duk_push_pointer(ctx, handle);
-    duk_call_method(ctx, 1 /*nargs*/);
-    duk_pop(ctx);
-
-    duk_pop(ctx);  /* pop instance */
-}

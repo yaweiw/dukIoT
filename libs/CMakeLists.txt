@@ -1,1 +1,1 @@
-add_subdirectory(iothubclientlib)
+add_subdirectory(iothubclientmqttlib)

@@ -12,7 +12,6 @@ extern "C" {
     duk_ret_t iothubclient_destory(duk_context *ctx);
 
     void iothubclient_init(duk_context *ctx);
-    void iothubclient_test(duk_context *ctx);
 
     typedef struct PROPERTY_TAG
     {

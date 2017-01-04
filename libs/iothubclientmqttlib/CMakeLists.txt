@@ -1,5 +1,5 @@
 if(NOT ${use_mqtt})
-    message(FATAL_ERROR "iothubclientlib being generated without mqtt support")
+    message(FATAL_ERROR "iothubclientmqttlib being generated without mqtt support")
 endif()
 
 compileAsC99()
@@ -13,18 +13,15 @@ ENDIF(WIN32)
 include_directories(${IOTHUB_CLIENT_INC_FOLDER})
 include_directories(${SHARED_UTIL_INC_FOLDER})
 
-add_library(iothubclientlib iothubclientlib.c)
+add_library(iothubclientmqttlib iothubclientmqttlib.c)
 
-target_link_libraries(iothubclientlib
+target_link_libraries(iothubclientmqttlib
 #iothubclient is here only because locking... in gballoc no less.
     iothub_client
-    #iothub_client_http_transport
     iothub_client_mqtt_transport
 )
 
-linkSharedUtil(iothubclientlib)
-#linkHttp(iothubclientlib)
-linkMqttLibrary(iothubclientlib)
-#linkUAMQP(iothubclientlib)
+linkSharedUtil(iothubclientmqttlib)
+linkMqttLibrary(iothubclientmqttlib)
 
-install (TARGETS iothubclientlib DESTINATION lib)
+#install (TARGETS iothubclientmqttlib DESTINATION lib)
